@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/examples/">
+    <Project Path="examples/PurchaseApproval/PurchaseApproval.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SuperSemantics.Vsl.AgentFramework/SuperSemantics.Vsl.AgentFramework.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SuperSemantics.Vsl.AgentFramework.Tests/SuperSemantics.Vsl.AgentFramework.Tests.csproj" />
+  </Folder>
+  <Project Path="../VSL-Core.NET/src/SuperSemantics.Vsl/SuperSemantics.Vsl.csproj" />
+</Solution>

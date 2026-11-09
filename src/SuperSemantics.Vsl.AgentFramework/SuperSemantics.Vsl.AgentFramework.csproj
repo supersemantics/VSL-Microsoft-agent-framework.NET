@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SuperSemantics.Vsl.AgentFramework</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+    <PackageId>SuperSemantics.Vsl.AgentFramework</PackageId>
+    <Description>Microsoft Agent Framework adapter for VSL governance primitives: compiles PreNodes and Invariants into gates that run before a tool call, and aborts the run fail-closed on denial.</Description>
+    <PackageTags>vsl;governance;ai-agents;agent-framework;microsoft-agent-framework</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Tested against 1.28.0. -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.28.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SuperSemantics.Vsl is not on NuGet yet: build against a sibling clone of VSL-Core.NET.
+         Switch to <PackageReference Include="SuperSemantics.Vsl" Version="0.1.0" /> once it is published. -->
+    <ProjectReference Include="..\..\..\VSL-Core.NET\src\SuperSemantics.Vsl\SuperSemantics.Vsl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="SuperSemantics.Vsl.AgentFramework.Tests" />
+  </ItemGroup>
+
+</Project>
