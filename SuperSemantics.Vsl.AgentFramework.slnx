@@ -8,5 +8,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/SuperSemantics.Vsl.AgentFramework.Tests/SuperSemantics.Vsl.AgentFramework.Tests.csproj" />
   </Folder>
-  <Project Path="../VSL-Core.NET/src/SuperSemantics.Vsl/SuperSemantics.Vsl.csproj" />
+  <Folder Name="/external/">
+    <Project Path="external/VSL-Core.NET/src/SuperSemantics.Vsl/SuperSemantics.Vsl.csproj" />
+  </Folder>
 </Solution>
