@@ -3,7 +3,7 @@
 A [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) adapter for [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`), the .NET port of vsl-core. It is the .NET counterpart of the Python adapter [vsl-maf](https://github.com/supersemantics/VSL-Microsoft-agent-framework) and behaves the same way.
 
 - NuGet package ID `SuperSemantics.Vsl.AgentFramework` (not yet published), namespace `SuperSemantics.Vsl.AgentFramework`.
-- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl`.
+- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl` 0.1.0.
 - `MafAdapter` passes `ConformanceSuite` with an empty result.
 - MIT licensed.
 
@@ -135,12 +135,16 @@ A non-default `Fallback` also warns: the middleware raises once, immediately, wi
 
 ## Build, test, run the example
 
-Clone [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) next to this repository (`SuperSemantics.Vsl` is not on NuGet yet), then:
+`SuperSemantics.Vsl` is not on NuGet yet, so [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) is included as a git submodule in `external/VSL-Core.NET`, pinned to `v0.1.0`. Clone with submodules:
 
 ```bash
+git clone --recurse-submodules https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET.git
+cd VSL-Microsoft-agent-framework.NET
 dotnet test
 dotnet run --project examples/PurchaseApproval
 ```
+
+In an existing clone, run `git submodule update --init` first.
 
 The example runs offline with a scripted model. Pass a real `IChatClient` to run it against a model service.
 
@@ -152,6 +156,7 @@ src/SuperSemantics.Vsl.AgentFramework/
 ├── VslAgentBuilderExtensions.cs   UseVslGate, UseVslGates, VslDenialMode, the exceptions, VslToolArguments
 └── HostedModelDetector.cs         the F2 heuristic
 examples/PurchaseApproval/         hard cap + budget gate, recorded decisions, denials handled
+external/VSL-Core.NET/             submodule: SuperSemantics.Vsl, pinned to v0.1.0
 tests/                             conformance, a real ChatClientAgent with a scripted chat client
 ```
 

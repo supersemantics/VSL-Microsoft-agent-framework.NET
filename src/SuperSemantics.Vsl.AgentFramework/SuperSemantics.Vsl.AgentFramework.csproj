@@ -10,6 +10,9 @@
     <PackageTags>vsl;governance;ai-agents;agent-framework;microsoft-agent-framework</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,9 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- SuperSemantics.Vsl is not on NuGet yet: build against a sibling clone of VSL-Core.NET.
-         Switch to <PackageReference Include="SuperSemantics.Vsl" Version="0.1.0" /> once it is published. -->
-    <ProjectReference Include="..\..\..\VSL-Core.NET\src\SuperSemantics.Vsl\SuperSemantics.Vsl.csproj" />
+    <!-- SuperSemantics.Vsl is not on NuGet yet: it builds from the external/VSL-Core.NET submodule,
+         pinned to tag v0.1.0 (clone with recurse-submodules). Switch to
+         <PackageReference Include="SuperSemantics.Vsl" Version="0.1.0" /> once it is published. -->
+    <ProjectReference Include="..\..\external\VSL-Core.NET\src\SuperSemantics.Vsl\SuperSemantics.Vsl.csproj" />
   </ItemGroup>
 
   <ItemGroup>

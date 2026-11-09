@@ -2,7 +2,7 @@
 
 What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` when a pull request merges.
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-09, tag `v0.1.0`)
 
 ### First release: VSL gates for Microsoft Agent Framework on .NET
 
@@ -13,6 +13,8 @@ What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` w
 - `UseVslGate` / `UseVslGates`: gate tool calls before they run. The default `VslDenialMode.Abort` stops the function-invocation loop and throws `VslGateDeniedException` to the caller of `RunAsync` or `RunStreamingAsync`. `ReturnToModel` keeps the framework's tool-error behaviour. A failing gate throws `VslGateFailedException`.
 - `VslToolArguments`: a model's JSON arguments as plain values.
 - An F2 heuristic that reads a monitor's compiled code for hosted-model calls.
+
+`SuperSemantics.Vsl` comes from the `external/VSL-Core.NET` git submodule, pinned to VSL-Core.NET `v0.1.0`, until it is on NuGet.
 
 **Why:** a throw from function middleware is absorbed by the Agent Framework. The tool does not run, but the model is told "Error: Function failed.", other tools in the batch still run, and `RunAsync` returns normally. Checked against Microsoft.Agents.AI 1.28.0 before this package was written. A gate the application cannot see is fail-open at the level of the run.
 
