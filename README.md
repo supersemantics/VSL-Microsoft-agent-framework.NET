@@ -2,8 +2,8 @@
 
 A [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) adapter for [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`), the .NET port of vsl-core. It is the .NET counterpart of the Python adapter [vsl-maf](https://github.com/supersemantics/VSL-Microsoft-agent-framework) and behaves the same way.
 
-- NuGet package ID `SuperSemantics.Vsl.AgentFramework` (not yet published), namespace `SuperSemantics.Vsl.AgentFramework`.
-- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl` 0.1.0.
+- NuGet package `SuperSemantics.Vsl.AgentFramework` (`dotnet add package SuperSemantics.Vsl.AgentFramework`), namespace `SuperSemantics.Vsl.AgentFramework`.
+- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl` 0.1.1; NuGet installs both with this package.
 - `MafAdapter` passes `ConformanceSuite` with an empty result.
 - MIT licensed.
 
@@ -135,7 +135,7 @@ A non-default `Fallback` also warns: the middleware raises once, immediately, wi
 
 ## Build, test, run the example
 
-`SuperSemantics.Vsl` is not on NuGet yet, so [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) is included as a git submodule in `external/VSL-Core.NET`, pinned to `v0.1.0`. Clone with submodules:
+To build this repository from source, clone it with submodules: [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`) is a git submodule in `external/VSL-Core.NET`, pinned to `v0.1.1`. Using the package doesn't need any of this: NuGet installs `SuperSemantics.Vsl` with it.
 
 ```bash
 git clone --recurse-submodules https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET.git
@@ -156,10 +156,10 @@ src/SuperSemantics.Vsl.AgentFramework/
 ├── VslAgentBuilderExtensions.cs   UseVslGate, UseVslGates, VslDenialMode, the exceptions, VslToolArguments
 └── HostedModelDetector.cs         the F2 heuristic
 examples/PurchaseApproval/         hard cap + budget gate, recorded decisions, denials handled
-external/VSL-Core.NET/             submodule: SuperSemantics.Vsl, pinned to v0.1.0
+external/VSL-Core.NET/             submodule: SuperSemantics.Vsl, pinned to v0.1.1
 tests/                             conformance, a real ChatClientAgent with a scripted chat client
 ```
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Copyright Super Semantics.
+MIT, see [LICENSE](https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET/blob/main/LICENSE). Copyright Super Semantics.
