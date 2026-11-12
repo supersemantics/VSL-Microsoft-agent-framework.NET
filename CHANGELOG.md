@@ -2,6 +2,14 @@
 
 What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` when a pull request merges.
 
+## 0.1.1 (unreleased): the README works as the NuGet package page; SuperSemantics.Vsl 0.1.1
+
+**Before:** the README, which NuGet shows as the package page, said the package was "not yet published" and that `SuperSemantics.Vsl` wasn't on NuGet. Its LICENSE link was relative, so it broke on nuget.org. The submodule was pinned to VSL-Core.NET `v0.1.0`.
+
+**After:** the README gives the `dotnet add package` command, says NuGet installs `SuperSemantics.Vsl` with this package, keeps the submodule only for building from source, and links to LICENSE on GitHub. The submodule is pinned to VSL-Core.NET `v0.1.1`, so the package depends on `SuperSemantics.Vsl` 0.1.1. The code is unchanged from 0.1.0, and so is SuperSemantics.Vsl's.
+
+**Why:** 0.1.1 is the first version published to NuGet, and a published version's page can't be changed later.
+
 ## 0.1.0 (2026-11-09, tag `v0.1.0`)
 
 ### First release: VSL gates for Microsoft Agent Framework on .NET
