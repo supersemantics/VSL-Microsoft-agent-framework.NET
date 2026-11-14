@@ -1,9 +1,7 @@
 # Publishes to nuget.org when a release tag (vX.Y.Z) is pushed, through NuGet
 # Trusted Publishing: no API key is stored anywhere. nuget.org hands out a
 # key that lasts one hour, and only to this repository, this workflow file and
-# the `nuget` environment. The package also gets a GitHub build attestation,
-# checked with
-# `gh attestation verify <file>.nupkg --repo supersemantics/VSL-Microsoft-agent-framework.NET`.
+# the `nuget` environment. nuget.org signs every package it accepts.
 # Only SuperSemantics.Vsl.AgentFramework is packed and pushed: SuperSemantics.Vsl
 # builds from the submodule but is published from its own repository.
 # A version that is already on nuget.org is skipped, not failed.
@@ -22,8 +20,7 @@ jobs:
     environment: nuget
     permissions:
       contents: read
-      id-token: write      # the NuGet login and the attestation both need it
-      attestations: write
+      id-token: write      # the NuGet login exchanges it for a one-hour key
     env:
       PROJECT: src/SuperSemantics.Vsl.AgentFramework/SuperSemantics.Vsl.AgentFramework.csproj
     steps:
@@ -51,9 +48,6 @@ jobs:
           if ls dist | grep -v '^SuperSemantics\.Vsl\.AgentFramework\.' ; then
             echo "Unexpected package in dist/"; exit 1
           fi
-      - uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: dist/*.nupkg
       - uses: NuGet/login@v1
         id: nuget
         with:

@@ -2,13 +2,21 @@
 
 What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` when a pull request merges.
 
-## 0.1.2 (unreleased): published from GitHub Actions through NuGet Trusted Publishing
+## Unreleased: the publish workflow no longer adds a GitHub build attestation
+
+**Before:** 0.1.2's publish workflow added a GitHub build attestation for the package, and this CHANGELOG said anyone could check the package with `gh attestation verify`.
+
+**After:** the attestation step is gone, and the 0.1.2 entry below is corrected. Publishing is otherwise unchanged: Trusted Publishing, a one-hour key, no stored API key. No new package version: nothing in the package changes.
+
+**Why:** nuget.org adds its own repository signature to every package it accepts, which changes the file. The attestation covered only the file built in GitHub Actions, never the one you download from nuget.org, so it couldn't be used to check that download. To check a package from nuget.org, use its signature (`dotnet nuget verify --all <file>.nupkg`).
+
+## 0.1.2 (2026-11-14, tag `v0.1.2`): published from GitHub Actions through NuGet Trusted Publishing
 
 **Before:** 0.1.1 was packed on a laptop and pushed to nuget.org with a personal API key.
 
-**After:** pushing a `vX.Y.Z` tag runs `.github/workflows/publish.yml`. It runs the tests, checks the tag matches the version, packs only `SuperSemantics.Vsl.AgentFramework` (with symbols; `SuperSemantics.Vsl` is published from VSL-Core.NET), adds a GitHub build attestation, and pushes to nuget.org with a key that nuget.org issues for one hour to this repository, workflow and `nuget` environment only. No API key is stored anywhere. The code is unchanged from 0.1.1.
+**After:** pushing a `vX.Y.Z` tag runs `.github/workflows/publish.yml`. It runs the tests, checks the tag matches the version, packs only `SuperSemantics.Vsl.AgentFramework` (with symbols; `SuperSemantics.Vsl` is published from VSL-Core.NET), adds a GitHub build attestation (see Unreleased: it did not match the file on nuget.org), and pushes to nuget.org with a key that nuget.org issues for one hour to this repository, workflow and `nuget` environment only. No API key is stored anywhere. The code is unchanged from 0.1.1.
 
-**Why:** PyPI and npm already publish this way. A key stored on a laptop can leak and has to be rotated by hand; a one-hour key tied to this workflow can't be reused elsewhere. The attestation lets anyone check which commit and workflow built the package (`gh attestation verify`).
+**Why:** PyPI and npm already publish this way. A key stored on a laptop can leak and has to be rotated by hand; a one-hour key tied to this workflow can't be reused elsewhere.
 
 ## 0.1.1 (2026-11-12, tag `v0.1.1`): the README works as the NuGet package page; SuperSemantics.Vsl 0.1.1
 
