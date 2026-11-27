@@ -2,7 +2,7 @@
 
 What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` when a pull request merges.
 
-## 0.2.0 (unreleased): SuperSemantics.Vsl 0.2.0, no F2 claims
+## 0.2.0 (2026-11-27, tag `v0.2.0`): SuperSemantics.Vsl 0.2.0, no F2 claims
 
 **Before:** the package depended on `SuperSemantics.Vsl` 0.1.1, and every gate in the README, example and tests passed an `AssuranceBasis`. `MafAdapter` read a monitor's or rule's compiled code and warned when it claimed `F2Modification.Full` but called a hosted model client.
 
@@ -16,7 +16,7 @@ What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` w
 
 **Before:** 0.1.2's publish workflow added a GitHub build attestation for the package, and this CHANGELOG said anyone could check the package with `gh attestation verify`.
 
-**After:** the attestation step is gone, and the 0.1.2 entry below is corrected. Publishing is otherwise unchanged: Trusted Publishing, a one-hour key, no stored API key. This changed no package code; it ships with 0.2.0, the first version published without the attestation.
+**After:** the attestation step is gone, and the 0.1.2 entry below is corrected. Publishing is otherwise unchanged: Trusted Publishing, a one-hour key, no stored API key. This changed no package code; it shipped with 0.2.0, the first version published without the attestation.
 
 **Why:** nuget.org adds its own repository signature to every package it accepts, which changes the file. The attestation covered only the file built in GitHub Actions, never the one you download from nuget.org, so it couldn't be used to check that download. To check a package from nuget.org, use its signature (`dotnet nuget verify --all <file>.nupkg`).
 
