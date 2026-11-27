@@ -2,11 +2,21 @@
 
 What changed in each release, and why. Newest first. Tagged `vX.Y.Z` on `main` when a pull request merges.
 
-## Unreleased: the publish workflow no longer adds a GitHub build attestation
+## 0.2.0 (unreleased): SuperSemantics.Vsl 0.2.0, no F2 claims
+
+**Before:** the package depended on `SuperSemantics.Vsl` 0.1.1, and every gate in the README, example and tests passed an `AssuranceBasis`. `MafAdapter` read a monitor's or rule's compiled code and warned when it claimed `F2Modification.Full` but called a hosted model client.
+
+**After:** the submodule is pinned to VSL-Core.NET `v0.2.0`, so the package depends on `SuperSemantics.Vsl` 0.2.0 (vsl-core 0.4.0's rules). Gates are built without an assurance basis, and the hosted-model heuristic is removed with `HostedModelDetector.cs` and its tests. The warning for a non-default `Fallback` stays. The README's F1/F2 section is now "What a gate reports", and the ledger section shows `WriteAction` and `Enforcement`. The example records each purchase with `WriteAction` and prints `ledger.Enforcement(decisionId)` for each request. Its ledger verifies with Python vsl-core 0.4.0, which reads the same enforcement for every decision. Code that still passes an `AssuranceBasis` compiles with a CS0618 warning from `SuperSemantics.Vsl`.
+
+**Why:** `SuperSemantics.Vsl` no longer takes a declared F2 level; enforcement is computed, not claimed.
+
+**Tests:** 19 pass. New: a real `ChatClientAgent` run where the ledger reads `BeforeAction` for an allowed and a denied purchase, and gates built without a basis compile without warnings. The three heuristic tests are removed.
+
+## Also released in 0.2.0: the publish workflow no longer adds a GitHub build attestation
 
 **Before:** 0.1.2's publish workflow added a GitHub build attestation for the package, and this CHANGELOG said anyone could check the package with `gh attestation verify`.
 
-**After:** the attestation step is gone, and the 0.1.2 entry below is corrected. Publishing is otherwise unchanged: Trusted Publishing, a one-hour key, no stored API key. No new package version: nothing in the package changes.
+**After:** the attestation step is gone, and the 0.1.2 entry below is corrected. Publishing is otherwise unchanged: Trusted Publishing, a one-hour key, no stored API key. This changed no package code; it ships with 0.2.0, the first version published without the attestation.
 
 **Why:** nuget.org adds its own repository signature to every package it accepts, which changes the file. The attestation covered only the file built in GitHub Actions, never the one you download from nuget.org, so it couldn't be used to check that download. To check a package from nuget.org, use its signature (`dotnet nuget verify --all <file>.nupkg`).
 
