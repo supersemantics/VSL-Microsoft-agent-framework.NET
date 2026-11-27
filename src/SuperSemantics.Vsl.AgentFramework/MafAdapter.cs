@@ -21,8 +21,8 @@ public sealed class MafAdapter : IVslAdapter
 
     /// <summary>Creates the adapter.</summary>
     /// <param name="identityKey">Recorded on every denial; pass the agent's own identity.</param>
-    /// <param name="onWarning">Receives the adapter's warnings (a non-default Fallback, an F2 claim the
-    /// code cannot support). Defaults to <see cref="Trace.TraceWarning(string)"/>.</param>
+    /// <param name="onWarning">Receives the adapter's warnings (a non-default Fallback, which the
+    /// middleware does not consume). Defaults to <see cref="Trace.TraceWarning(string)"/>.</param>
     public MafAdapter(string identityKey = "vsl-maf", Action<string>? onWarning = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(identityKey);
@@ -45,7 +45,6 @@ public sealed class MafAdapter : IVslAdapter
                 + "yourself around the compiled gate if needed.");
         }
 
-        WarnIfFullClaimReachesHostedModel($"PreNode '{preNode.Name}'", preNode.AssuranceBasis, preNode.Monitor);
         var identityKey = IdentityKey;
         return async candidateInput =>
         {
@@ -61,7 +60,6 @@ public sealed class MafAdapter : IVslAdapter
     public CompiledGate CompileInvariant(Invariant invariant)
     {
         ArgumentNullException.ThrowIfNull(invariant);
-        WarnIfFullClaimReachesHostedModel($"Invariant '{invariant.Name}'", invariant.AssuranceBasis, invariant.Rule);
         var identityKey = IdentityKey;
         return async candidateInput =>
         {
@@ -77,25 +75,5 @@ public sealed class MafAdapter : IVslAdapter
                 throw new InvariantViolationException(reason, identityKey, invariant.Name, terminal);
             }
         };
-    }
-
-    private void WarnIfFullClaimReachesHostedModel(string name, AssuranceBasis basis, Delegate code)
-    {
-        if (basis.F2Modification != F2Modification.Full)
-        {
-            return;
-        }
-
-        var reached = HostedModelDetector.FindHostedModelCall(code);
-        if (reached is null)
-        {
-            return;
-        }
-
-        _warn(
-            $"{name} claims F2Modification.Full, but its monitor/rule appears to call a hosted model API ({reached}). "
-            + "A hosted, black-box model call cannot modify the energy function, so Full is not achievable this way; "
-            + "the honest ceiling is F2Modification.Partial (Medium). This is a heuristic check, not proof: it can miss "
-            + "indirect calls, and passing it does not confirm a Full claim either.");
     }
 }

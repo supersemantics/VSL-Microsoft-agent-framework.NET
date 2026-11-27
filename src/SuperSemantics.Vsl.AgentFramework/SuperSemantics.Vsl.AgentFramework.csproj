@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- SuperSemantics.Vsl builds from the external/VSL-Core.NET submodule, pinned to tag v0.1.1
-         (clone with recurse-submodules). The packed package depends on SuperSemantics.Vsl 0.1.1
+    <!-- SuperSemantics.Vsl builds from the external/VSL-Core.NET submodule, pinned to tag v0.2.0
+         (clone with recurse-submodules). The packed package depends on SuperSemantics.Vsl 0.2.0
          from NuGet. -->
     <ProjectReference Include="..\..\external\VSL-Core.NET\src\SuperSemantics.Vsl\SuperSemantics.Vsl.csproj" />
   </ItemGroup>

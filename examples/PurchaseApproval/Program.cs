@@ -4,8 +4,8 @@
 //   - Invariant "purchase-hard-cap": the amount must never exceed $1000.
 //   - PreNode "purchase-within-budget": budget / amount, a ratio where 1.0 is break-even, must be
 //     above 1.1. Every decision is recorded with WriteGateDecision.
-// Neither gate involves a model at the guarded call: F1 = true, F2 = None (Low). They block what
-// they deny; they do not shape what the model produces.
+// The tool records that it ran with WriteAction, so the ledger shows whether each gate decided
+// before the purchase: ledger.Enforcement(decisionId).
 //
 // Runs offline: ScriptedClient stands in for the model and asks for the purchase in each request.
 // For a real model, pass any IChatClient instead, for example an Azure OpenAI or Foundry client
@@ -23,7 +23,6 @@ const double DailyBudgetRemaining = 500.0;
 const string BudgetGate = "purchase-within-budget";
 const string CapGate = "purchase-hard-cap";
 
-var noModelShaping = new AssuranceBasis(f1PreCommitment: true, F2Modification.None);
 var ledger = new VerbaLedger(new JsonlLedgerStore("purchase-ledger.jsonl", fsync: true));
 string decisionId = "";
 
@@ -37,8 +36,7 @@ var capGate = adapter.CompileInvariant(new Invariant(
         var holds = amount > 0 && amount <= HardCap;
         ledger.WriteGateDecision(AgentId, CapGate, allowed: holds, decisionId: decisionId);
         return Task.FromResult(holds);
-    },
-    noModelShaping));
+    }));
 
 var budgetGate = adapter.CompilePreNode(new PreNode(
     BudgetGate,
@@ -51,11 +49,14 @@ var budgetGate = adapter.CompilePreNode(new PreNode(
         ledger.WriteGateDecision(AgentId, BudgetGate, estimate: estimate, gammaThreshold: Thresholds.RobustGammaDefault, decisionId: decisionId);
         return Task.FromResult(estimate);
     },
-    noModelShaping,
     gammaThreshold: Thresholds.RobustGammaDefault));
 
 var approvePurchase = AIFunctionFactory.Create(
-    (double amount, string vendor) => $"APPROVED: ${amount:F2} from {vendor}",
+    (double amount, string vendor) =>
+    {
+        ledger.WriteAction(AgentId, "approve_purchase", decisionId);
+        return $"APPROVED: ${amount:F2} from {vendor}";
+    },
     "approve_purchase",
     "Approve a purchase transaction.");
 
@@ -90,6 +91,8 @@ foreach (var (request, amount, vendor) in new[]
         ledger.Write(hardCap ? LedgerEntryType.Terminal : LedgerEntryType.PreNode, AgentId, decisionId: decisionId,
             payload: new Dictionary<string, object?> { ["escalated_to"] = "finance-approvers", ["reason"] = denied.Denial.Reason });
     }
+
+    Console.WriteLine($"  enforcement: {ledger.Enforcement(decisionId).ToWire()}");
 }
 
 Console.WriteLine($"\nLedger intact: {ledger.VerifyIntegrity()}");

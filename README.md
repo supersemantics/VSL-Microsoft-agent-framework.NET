@@ -3,7 +3,7 @@
 A [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) adapter for [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`), the .NET port of vsl-core. It is the .NET counterpart of the Python adapter [vsl-maf](https://github.com/supersemantics/VSL-Microsoft-agent-framework) and behaves the same way.
 
 - NuGet package `SuperSemantics.Vsl.AgentFramework` (`dotnet add package SuperSemantics.Vsl.AgentFramework`), namespace `SuperSemantics.Vsl.AgentFramework`.
-- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl` 0.1.1; NuGet installs both with this package.
+- Targets .NET 10. Depends on `Microsoft.Agents.AI` (tested against 1.28.0) and `SuperSemantics.Vsl` 0.2.0; NuGet installs both with this package.
 - `MafAdapter` passes `ConformanceSuite` with an empty result.
 - MIT licensed.
 
@@ -39,9 +39,7 @@ var gate = new MafAdapter("refund-agent").CompilePreNode(new PreNode(
         var estimate = new GammaEstimate(amount > 0 ? RefundLimit / amount : 0.0);
         ledger.WriteGateDecision("refund-agent", RefundGate, estimate: estimate, gammaThreshold: Thresholds.RobustGammaDefault);
         return Task.FromResult(estimate);
-    },
-    // No model at the guarded call: the gate only allows or blocks.
-    new AssuranceBasis(f1PreCommitment: true, F2Modification.None)));
+    }));
 
 IChatClient model = /* any IChatClient: Azure OpenAI, Foundry, OpenAI, ... */;
 var issueRefund = AIFunctionFactory.Create((double amount) => $"Refunded {amount}", "issue_refund");
@@ -104,6 +102,8 @@ Nothing in this package writes to a `VerbaLedger`; the conformance contract forb
 
 A denied gate's record flags drift, so write the decision's next entry from your `catch (VslGateDeniedException)` block. `examples/PurchaseApproval` does this.
 
+To record the tool call itself, call `ledger.WriteAction(identityKey, actionName, decisionId)` inside the tool, with the same `decisionId` as its gate decisions. `ledger.Enforcement(decisionId)` then reads `BeforeAction` when every gate decision came before the tool ran (or a denial stopped it), and `AfterAction` when the tool ran first. The example records each purchase and prints the result.
+
 The JSONL ledger is byte-compatible with Python vsl-core, so a ledger written by a .NET agent verifies with the Python tooling, and the other way round. The example's ledger was checked this way.
 
 ## Multi-agent workflows: handovers and Cluster Gamma
@@ -119,23 +119,15 @@ ledger.WriteGateDecision("refund-agent", RefundGate, estimate: estimate, gammaTh
 
 Gating every tool call does not make the composed system safe: in the Flash Crash, every participant's Gamma was above 1 and the Cluster's was 0. If several agents coordinate on one outcome, declare them as a `Cluster` and pass its `ClusterKey` on their records. The Cluster's `Invariants` compile and wire like any other.
 
-## The F1/F2 assurance distinction
+## What a gate reports
 
-| Gate | F1 | F2 | Level |
-|---|---|---|---|
-| Amount cap or budget check before a tool (no model at the call) | true | `None` | Low |
-| Gate before a hosted-model call whose system prompt the application writes | true | `Partial` | Medium |
-| Gate before a self-hosted model where the application steers logits or activations | true | `Full` | High |
+Gates take no assurance claim: build a `PreNode` or `Invariant` from its name, description and monitor or rule. Whether a gate ran before its tool is computed from the ledger, not declared (see [vsl-core's "What a gate reports"](https://github.com/supersemantics/VSL-Core#what-a-gate-reports)). Code written for 0.1.x that still passes an `AssuranceBasis` uses `SuperSemantics.Vsl`'s obsolete constructors, so the compiler warns (CS0618); use the overload without it.
 
-The level measures influence on the model, not enforcement: a Low gate still blocks every tool call it denies.
-
-The basis is self-declared. `MafAdapter` carries one heuristic, the .NET counterpart of vsl-maf's source scan. It reads the compiled code of a monitor or rule (following async state machines, and one level of calls into the same assembly) and warns when a `Full` claim calls a hosted model client: `IChatClient`, `AIAgent`/`ChatClientAgent`, OpenAI, Azure OpenAI, Azure AI Inference/Projects/Agents, Anthropic, Google GenAI, Mistral or Cohere SDKs. Warnings go to `Trace` unless you pass `onWarning`. The check can miss indirect calls, and passing it doesn't confirm a `Full` claim.
-
-A non-default `Fallback` also warns: the middleware raises once, immediately, with no retry loop.
+A non-default `Fallback` warns: the middleware raises once, immediately, with no retry loop. Warnings go to `Trace` unless you pass `onWarning`.
 
 ## Build, test, run the example
 
-To build this repository from source, clone it with submodules: [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`) is a git submodule in `external/VSL-Core.NET`, pinned to `v0.1.1`. Using the package doesn't need any of this: NuGet installs `SuperSemantics.Vsl` with it.
+To build this repository from source, clone it with submodules: [VSL-Core.NET](https://github.com/supersemantics/VSL-Core.NET) (`SuperSemantics.Vsl`) is a git submodule in `external/VSL-Core.NET`, pinned to `v0.2.0`. Using the package doesn't need any of this: NuGet installs `SuperSemantics.Vsl` with it.
 
 ```bash
 git clone --recurse-submodules https://github.com/supersemantics/VSL-Microsoft-agent-framework.NET.git
@@ -153,10 +145,9 @@ The example runs offline with a scripted model. Pass a real `IChatClient` to run
 ```
 src/SuperSemantics.Vsl.AgentFramework/
 ├── MafAdapter.cs                  IVslAdapter: compiles PreNodes and Invariants
-├── VslAgentBuilderExtensions.cs   UseVslGate, UseVslGates, VslDenialMode, the exceptions, VslToolArguments
-└── HostedModelDetector.cs         the F2 heuristic
-examples/PurchaseApproval/         hard cap + budget gate, recorded decisions, denials handled
-external/VSL-Core.NET/             submodule: SuperSemantics.Vsl, pinned to v0.1.1
+└── VslAgentBuilderExtensions.cs   UseVslGate, UseVslGates, VslDenialMode, the exceptions, VslToolArguments
+examples/PurchaseApproval/         hard cap + budget gate, recorded decisions and actions, denials handled
+external/VSL-Core.NET/             submodule: SuperSemantics.Vsl, pinned to v0.2.0
 tests/                             conformance, a real ChatClientAgent with a scripted chat client
 ```
 

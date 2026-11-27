@@ -14,7 +14,6 @@ namespace SuperSemantics.Vsl.AgentFramework.Tests;
 public class RealAgentTests
 {
     private const double PurchaseLimit = 1000.0;
-    private static readonly AssuranceBasis NoModelShaping = new(true, F2Modification.None);
 
     private sealed class Tools
     {
@@ -71,15 +70,13 @@ public class RealAgentTests
                 var estimate = new GammaEstimate(amount > 0 ? PurchaseLimit / amount : 0.0);
                 ledger?.WriteGateDecision(identity, "purchase-within-limit", estimate: estimate, gammaThreshold: Thresholds.RobustGammaDefault);
                 return Task.FromResult(estimate);
-            },
-            NoModelShaping));
+            }));
 
     private static CompiledGate HardCapGate() =>
         new MafAdapter().CompileInvariant(new Invariant(
             "purchase-hard-cap",
             "Never above the cap.",
-            candidate => Task.FromResult(VslToolArguments.GetDouble((IReadOnlyDictionary<string, object?>)candidate!, "amount") is > 0 and <= PurchaseLimit),
-            NoModelShaping));
+            candidate => Task.FromResult(VslToolArguments.GetDouble((IReadOnlyDictionary<string, object?>)candidate!, "amount") is > 0 and <= PurchaseLimit)));
 
     private static AIAgent Agent(IChatClient client, Tools tools, Func<AIAgentBuilder, AIAgentBuilder> gates) =>
         gates(new ChatClientAgent(client, instructions: "Approve purchases.", tools: [tools.Approve, tools.Note]).AsBuilder()).Build();
@@ -226,48 +223,55 @@ public class RealAgentTests
         Assert.Equal([true, false], payloads.Select(p => (bool)p["allowed"]!));
         Assert.True(ledger.VerifyIntegrity());
     }
+
+    [Theory]
+    [InlineData(250.0, true)]
+    [InlineData(5000.0, false)]
+    public async Task The_ledger_shows_the_gate_held_before_the_tool(double amount, bool runs)
+    {
+        var ledger = new VerbaLedger();
+        var purchases = new List<double>();
+        var gate = new MafAdapter("purchase-agent").CompileInvariant(new Invariant(
+            "purchase-hard-cap",
+            "Never above the cap.",
+            candidate =>
+            {
+                var holds = VslToolArguments.GetDouble((IReadOnlyDictionary<string, object?>)candidate!, "amount") is > 0 and <= PurchaseLimit;
+                ledger.WriteGateDecision("purchase-agent", "purchase-hard-cap", allowed: holds, decisionId: "d1");
+                return Task.FromResult(holds);
+            }));
+        var approve = AIFunctionFactory.Create((double amount) =>
+        {
+            purchases.Add(amount);
+            ledger.WriteAction("purchase-agent", "approve_purchase", "d1");
+            return $"APPROVED {amount}";
+        }, "approve_purchase");
+        var agent = new ChatClientAgent(new ScriptedClient(Buy(amount)), instructions: "Approve purchases.", tools: [approve])
+            .AsBuilder().UseVslGate(gate, "approve_purchase").Build();
+
+        if (runs)
+        {
+            await agent.RunAsync("buy");
+        }
+        else
+        {
+            await Assert.ThrowsAsync<VslGateDeniedException>(() => agent.RunAsync("buy"));
+        }
+
+        Assert.Equal(runs, purchases.Count == 1);
+        Assert.Equal(Enforcement.BeforeAction, ledger.Enforcement("d1"));
+    }
 }
 
 public class AdapterTests
 {
-    private static readonly AssuranceBasis FullClaim = new(true, F2Modification.Full);
-
-    private static async Task<GammaEstimate> JudgeWithAChatClient(IChatClient judge, object? candidate)
-    {
-        var verdict = await judge.GetResponseAsync("Is this purchase reasonable? " + candidate);
-        return new GammaEstimate(verdict.Text == "yes" ? 2.0 : 0.0);
-    }
-
     [Fact]
-    public void A_full_claim_on_a_hosted_model_judge_warns()
+    public void Gates_built_without_an_assurance_basis_compile_without_warnings()
     {
-        IChatClient judge = null!;
-        var warnings = new List<string>();
-        new MafAdapter(onWarning: warnings.Add).CompilePreNode(new PreNode("judge", "LLM judge", c => JudgeWithAChatClient(judge, c), FullClaim));
-        Assert.Contains(warnings, w => w.Contains("hosted model API", StringComparison.Ordinal) && w.Contains("Microsoft.Extensions.AI.", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void An_async_lambda_calling_a_chat_client_directly_is_followed_into_its_state_machine()
-    {
-        IChatClient judge = null!;
-        var warnings = new List<string>();
-        new MafAdapter(onWarning: warnings.Add).CompilePreNode(new PreNode("judge", "d", async c =>
-        {
-            var verdict = await judge.GetResponseAsync("judge " + c);
-            return new GammaEstimate(verdict.Text.Length);
-        }, FullClaim));
-        Assert.Single(warnings);
-    }
-
-    [Fact]
-    public void No_warning_without_a_model_or_without_a_full_claim()
-    {
-        IChatClient judge = null!;
         var warnings = new List<string>();
         var adapter = new MafAdapter(onWarning: warnings.Add);
-        adapter.CompilePreNode(new PreNode("cap", "d", _ => Task.FromResult(new GammaEstimate(2.0)), FullClaim));
-        adapter.CompilePreNode(new PreNode("judge", "d", c => JudgeWithAChatClient(judge, c), new AssuranceBasis(true, F2Modification.Partial)));
+        adapter.CompilePreNode(new PreNode("cap", "d", _ => Task.FromResult(new GammaEstimate(2.0))));
+        adapter.CompileInvariant(new Invariant("rule", "d", _ => Task.FromResult(true)));
         Assert.Empty(warnings);
     }
 
@@ -276,7 +280,7 @@ public class AdapterTests
     {
         var warnings = new List<string>();
         new MafAdapter(onWarning: warnings.Add).CompilePreNode(new PreNode("p", "d", _ => Task.FromResult(new GammaEstimate(2.0)),
-            new AssuranceBasis(true, F2Modification.None), fallback: new Fallback(MaxRetries: 5)));
+            fallback: new Fallback(MaxRetries: 5)));
         Assert.Contains(warnings, w => w.Contains("does not consume Fallback", StringComparison.Ordinal));
     }
 
